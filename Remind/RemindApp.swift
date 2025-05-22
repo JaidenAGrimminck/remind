@@ -16,6 +16,7 @@ struct RemindApp: App {
     var body: some Scene {
         Window("", id: "overlay") {
             OverlayRootView()
+                .environmentObject(appDelegate.coordinator)
                 .frame(width: OverlayRootView._w, height: OverlayRootView._h)
                 .ignoresSafeArea()
         }

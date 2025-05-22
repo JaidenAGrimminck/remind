@@ -35,11 +35,13 @@ extension Array where Element == Event {
 }
 
 struct OverlayRootView: View {
+    @EnvironmentObject private var coord: WindowCoordinator
+    
     static var _w = CGFloat(280);
     static var _h = CGFloat(420);
     static var visibleTab: CGFloat = 24
     
-    static var topMargin: CGFloat = 10
+    static var topMargin: CGFloat = -10
     static var rightMargin: CGFloat = 10
     
     static var bgColor = Color(red: 33/255, green: 33/255, blue: 33/255)
@@ -56,11 +58,11 @@ struct OverlayRootView: View {
     var body: some View {
         ZStack(alignment: .leading) {
             mainCard
-            // Chevron tab
-            chevron
-                .offset(x: isOpen ? 260 : 0)    // follows the card
         }
         .onReceive(timer) { now = $0 }
+        .onReceive(coord.$isOpen) {
+            isOpen = $0
+        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
@@ -99,9 +101,14 @@ private extension OverlayRootView {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(OverlayRootView.bgColor)
-        .cornerRadius(12)
-        .overlay(RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.white.opacity(0.15), lineWidth: 1))
+        .clipShape(
+            .rect(
+                topLeadingRadius: 0,
+                bottomLeadingRadius: 12,
+                bottomTrailingRadius: 12,
+                topTrailingRadius: 12
+            )
+        )
         .shadow(radius: 0)
         // Slide in/out
         .offset(x: isOpen ? 0 : OverlayRootView._w - OverlayRootView.visibleTab)       // width (280) - visible tab (20)
@@ -129,11 +136,16 @@ private extension OverlayRootView {
 //            }
             VStack(alignment: .leading) {
                 HStack(alignment: .bottom) {
-                    Text("12:12:12")
-                        .font(.system(size: 24))
-                    
-                    Text("left")
-                        .font(.system(size: 12))
+                    if let next = nextEvent {
+                        Text(timeLeft(to: next.date))
+                            .font(.system(size: 24))
+                        
+                        Text("left")
+                            .font(.system(size: 12))
+                    } else {
+                        Text("Nothing left!")
+                            .font(.system(size: 24))
+                    }
                 }
                 .padding(.bottom, 6)
                 
@@ -148,25 +160,25 @@ private extension OverlayRootView {
             
             VStack(alignment: .trailing) {
                 HStack {
-                    Text("n")
+                    Text(String(events.count(where: { $0.kind == .exam })))
                         .font(.system(size: 10, weight: .bold))
                     Text(" exams")
                         .font(.system(size: 10))
                 }.padding(.bottom, 2)
                 HStack {
-                    Text("n")
+                    Text(String(events.count(where: { $0.kind == .assignment })))
                         .font(.system(size: 10, weight: .bold))
                     Text(" assignments")
                         .font(.system(size: 10))
                 }.padding(.bottom, 2)
                 HStack {
-                    Text("n")
+                    Text(String(events.count(where: { $0.kind == .todo })))
                         .font(.system(size: 10, weight: .bold))
                     Text(" todos")
                         .font(.system(size: 10))
                 }.padding(.bottom, 2)
                 HStack {
-                    Text("n")
+                    Text(String(events.count(where: { $0.kind == .event })))
                         .font(.system(size: 10, weight: .bold))
                     Text(" events")
                         .font(.system(size: 10))
